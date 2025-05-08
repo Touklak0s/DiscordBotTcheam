@@ -84,7 +84,7 @@ async function updateRolesMessage(guild) {
 
   const embed = new EmbedBuilder()
     .setTitle('🎮 Choisis tes jeux')
-    .setDescription(rolesData.map(r => `${r.emoji || ''} ${r.name} ${r.emoji || ''}`).join('\n') || 'Aucun rôle.')
+    .setDescription(rolesData.map(r => `${r.name}`).join('\n') || 'Aucun rôle.')
     .setColor(0x9c84ef);
 
   const components = [];
