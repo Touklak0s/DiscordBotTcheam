@@ -79,7 +79,7 @@ async function updateRolesMessage(guild) {
   const channel = await guild.channels.fetch(roleMessageData.channelId).catch(() => null);
   if (!channel) return;
 
-  const [rows] = await db.execute('SELECT * FROM roledeuxmerde');
+  const [rows] = await db.execute('SELECT * FROM roletroismerde');
   const rolesData = rows;
 
   const embed = new EmbedBuilder()
@@ -92,7 +92,7 @@ async function updateRolesMessage(guild) {
   rolesData.forEach((r, i) => {
     row.addComponents(
       new ButtonBuilder()
-        .setCustomId(`toggle_role_${r.id}`)
+        .setCustomId(`toggle_role_${r.role_id}`)
         .setLabel(r.name)
         .setStyle(ButtonStyle.Secondary)
     );
@@ -131,8 +131,8 @@ client.on(Events.InteractionCreate, async interaction => {
         mentionable: true
       });
 
-      await db.execute('INSERT INTO roledeuxmerde (id, name, color, emoji) VALUES (?, ?, ?, ?)', [
-        role.id, role.name, couleur || null, icone || null
+      await db.execute('INSERT INTO roletroismerde (id, name, color, emoji, role_id) VALUES (?, ?, ?, ?)', [
+        role.id, role.name, couleur || null, icone || null, role.id
       ]);
 
       await updateRolesMessage(interaction.guild);
@@ -144,12 +144,12 @@ client.on(Events.InteractionCreate, async interaction => {
       if (!role) return interaction.reply({ content: '❌ Rôle introuvable.', ephemeral: true });
 
       await role.delete();
-      await db.execute('DELETE FROM roledeuxmerde WHERE id = ?', [role.id]);
+      await db.execute('DELETE FROM roletroismerde WHERE role_id = ?', [role.role_id]);
       await updateRolesMessage(interaction.guild);
       await interaction.reply({ content: `🗑️ Rôle **${nom}** supprimé.`, ephemeral: true });
 
     } else if (commandName === 'roles-setup') {
-      const [rows] = await db.execute('SELECT * FROM roledeuxmerde');
+      const [rows] = await db.execute('SELECT * FROM roletroismerde');
       const rolesData = rows;
 
       const embed = new EmbedBuilder()
@@ -162,7 +162,7 @@ client.on(Events.InteractionCreate, async interaction => {
       rolesData.forEach((r, i) => {
         row.addComponents(
           new ButtonBuilder()
-            .setCustomId(`toggle_role_${r.id}`)
+            .setCustomId(`toggle_role_${r.role_id}`)
             .setLabel(r.name)
             .setStyle(ButtonStyle.Secondary)
         );
