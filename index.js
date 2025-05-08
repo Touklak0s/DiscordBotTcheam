@@ -130,13 +130,14 @@ client.on(Events.InteractionCreate, async interaction => {
         hoist: true,
         mentionable: true
       });
+      
+      await updateRolesMessage(interaction.guild);
 
       await db.execute('INSERT INTO roles (id, name, color, emoji) VALUES (?, ?, ?, ?)', [
         role.id, role.name, couleur || null, icone || null
       ]);
 
-      await updateRolesMessage(interaction.guild);
-      await interaction.reply({ content: `✅ Rôle **${role.name}** créé ! avec l'ID ${role.id}`, ephemeral: true });
+      await interaction.reply({ content: `✅ Rôle **${role.name}** créé !`, ephemeral: true });
 
     } else if (commandName === 'role-delete') {
       const nom = interaction.options.getString('nom');
