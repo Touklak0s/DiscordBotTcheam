@@ -187,7 +187,10 @@ client.on(Events.InteractionCreate, async interaction => {
     try {
       const roleId = interaction.customId.replace('toggle_role_', '');
       const role = interaction.guild.roles.cache.get(roleId);
-      if (!role) return interaction.reply({ content: '❌ Rôle introuvable.', ephemeral: true });
+      if (!role) return interaction.reply({ 
+        content: `❌ Une erreur est survenue. ID du rôle manquant ou invalide : ${interaction.customId.replace('toggle_role_', '')}`, 
+        ephemeral: true 
+      });
   
       const member = interaction.member;
       const hasRole = member.roles.cache.has(roleId);
