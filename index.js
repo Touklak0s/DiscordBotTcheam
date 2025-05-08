@@ -64,8 +64,8 @@ function saveRoleMessageData(data) {
 }
 
 async function updateRolesMessage(client) {
-  const guild = await client.guilds.fetch(process.env.GUILD_ID);
-  const channel = await guild.channels.fetch(process.env.ROLES_CHANNEL_ID);
+  // const guild = await client.guilds.fetch(process.env.GUILD_ID);
+  const channel = await guild.channels.fetch(roleMessageData.channelId).catch(() => null);
   const rolesData = JSON.parse(fs.readFileSync('roles.json'));
 
   const embed = {
