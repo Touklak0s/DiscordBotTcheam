@@ -119,9 +119,9 @@ client.on(Events.InteractionCreate, async interaction => {
     const { commandName } = interaction;
 
     if (commandName === 'role-create') {
-      const nom = interaction.options.getString('nom');
-      const couleur = interaction.options.getString('couleur');
-      const icone = interaction.options.getString('icone') || '';
+      const nom      = interaction.options.getString('nom');
+      const couleur  = interaction.options.getString('couleur');
+      const icone    = interaction.options.getString('icone') || '';
       const roleName = `${icone} ${nom} ${icone}`.trim();
 
       const role = await interaction.guild.roles.create({
@@ -136,7 +136,7 @@ client.on(Events.InteractionCreate, async interaction => {
       ]);
 
       await updateRolesMessage(interaction.guild);
-      await interaction.reply({ content: `✅ Rôle **${role.name}** créé !`, ephemeral: true });
+      await interaction.reply({ content: `✅ Rôle **${role.name}** créé ! avec l'ID ${role.id}`, ephemeral: true });
 
     } else if (commandName === 'role-delete') {
       const nom = interaction.options.getString('nom');
