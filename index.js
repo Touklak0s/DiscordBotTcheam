@@ -63,29 +63,45 @@ function saveRoleMessageData(data) {
   fs.writeFileSync('./rolesMessage.json', JSON.stringify(data, null, 2));
 }
 
-async function updateRolesMessage(guild) {
-  if (!roleMessageData) return;
-  const channel = await guild.channels.fetch(roleMessageData.channelId).catch(() => null);
-  const message = await channel?.messages.fetch(roleMessageData.messageId).catch(() => null);
+async function updateRolesMessage(client) {
+  const guild = await client.guilds.fetch(process.env.GUILD_ID);
+  const channel = await guild.channels.fetch(process.env.ROLES_CHANNEL_ID);
+  const rolesData = JSON.parse(fs.readFileSync('roles.json'));
 
-  if (!channel || !message) return;
+  const embed = {
+    title: '🎮 Rôles de jeux disponibles',
+    description: rolesData.map(role => `${role.emoji} ${role.name} ${role.emoji}`).join('\n'),
+    color: 0x9c84ef
+  };
 
-  const embed = new EmbedBuilder()
-    .setTitle('🎮 Rôles de jeux disponibles')
-    .setDescription(createdRoles.map(role => `${role.name}`).join('\n') || 'Aucun rôle disponible.')
-    .setColor('Random');
+  const components = [];
+  let currentRow = { type: 1, components: [] };
 
-  const rows = [];
-  for (const role of createdRoles) {
-    const button = new ButtonBuilder()
-      .setCustomId(`toggle_role_${role.id}`)
-      .setLabel(role.name)
-      .setStyle(ButtonStyle.Secondary);
-    rows.push(new ActionRowBuilder().addComponents(button));
+  for (let i = 0; i < rolesData.length; i++) {
+    const role = rolesData[i];
+
+    const button = {
+      type: 2,
+      label: role.name,
+      custom_id: `role-${role.name}`,
+      style: 1
+    };
+
+    currentRow.components.push(button);
+
+    if (currentRow.components.length === 5 || i === rolesData.length - 1) {
+      components.push(currentRow);
+      currentRow = { type: 1, components: [] };
+    }
+
+    // Ne pas dépasser 5 lignes (Discord limite)
+    if (components.length >= 5) break;
   }
 
-  await message.edit({ embeds: [embed], components: rows });
+  const message = await channel.messages.fetch(process.env.ROLES_MESSAGE_ID);
+  await message.edit({ embeds: [embed], components });
 }
+
 
 client.once('ready', () => {
   console.log(`✅ Connecté en tant que ${client.user.tag}`);
