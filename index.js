@@ -131,7 +131,7 @@ client.on(Events.InteractionCreate, async interaction => {
         mentionable: true
       });
 
-      await db.execute('INSERT INTO roletroismerde (id, name, color, emoji, role_id) VALUES (?, ?, ?, ?)', [
+      await db.execute('INSERT INTO roletroismerde (id, name, color, emoji, role_id) VALUES (?, ?, ?, ?, ?)', [
         role.id, role.name, couleur || null, icone || null, role.id
       ]);
 
