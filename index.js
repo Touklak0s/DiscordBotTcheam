@@ -1,39 +1,21 @@
-// Discord bot to manage game roles in a server
-process.env.DEBUG = 'discord.js:*';
-
-// Function to parse color input
-function parseColor(input) {
-    if (!input) return null;
-
-    const namedColors = {
-        red: 0xFF0000,
-        green: 0x00FF00,
-        blue: 0x0000FF,
-        purple: 0x800080,
-        pink: 0xFFC0CB,
-        yellow: 0xFFFF00,
-        orange: 0xFFA500,
-        black: 0x000000,
-        white: 0xFFFFFF,
-    };
-
-    if (input.startsWith('#')) {
-        return parseInt(input.slice(1), 16);
-    }
-
-    const color = namedColors[input.toLowerCase()];
-    return color ?? null;
-}
-
-
-// index.js
-const { Client, GatewayIntentBits, Partials, Routes, REST, SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, EmbedBuilder, Events } = require('discord.js');
-const fs = require('fs');
 require('dotenv').config();
+const { 
+  Client, 
+  GatewayIntentBits, 
+  Partials, 
+  REST, 
+  Routes, 
+  SlashCommandBuilder, 
+  ButtonBuilder, 
+  ButtonStyle, 
+  ActionRowBuilder, 
+  EmbedBuilder, 
+  Events 
+} = require('discord.js');
+const mysql = require('mysql2/promise');
+const fs = require('fs');
 
-const TOKEN = process.env.DISCORD_TOKEN;
-const CLIENT_ID = process.env.CLIENT_ID;
-
+// Client Discord
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -44,132 +26,160 @@ const client = new Client({
   partials: [Partials.Channel]
 });
 
-let createdRoles = [];
+// Connexion MySQL
+let db;
+async function connectDB() {
+  db = await mysql.createConnection({
+    host     : process.env.MYSQLHOST,
+    user     : process.env.MYSQLUSER,
+    password : process.env.MYSQLPASSWORD,
+    database : process.env.MYSQLDATABASE,
+    port     : process.env.MYSQLPORT
+  });
+  console.log('✅ Connecté à la base de données MySQL');
+}
+connectDB();
+
+// Gestion des couleurs
+function parseColor(input) {
+  const namedColors = {
+    red    : 0xFF0000,
+    green  : 0x00FF00,
+    blue   : 0x0000FF,
+    purple : 0x800080,
+    pink   : 0xFFC0CB,
+    yellow : 0xFFFF00,
+    orange : 0xFFA500,
+    black  : 0x000000,
+    white  : 0xFFFFFF,
+    gray   : 0x808080,
+    brown  : 0xA52A2A,
+    cyan   : 0x00FFFF,
+    magenta: 0xFF00FF,
+  };
+  if (!input) return null;
+  if (input.startsWith('#')) return parseInt(input.slice(1), 16);
+  return namedColors[input.toLowerCase()] || null;
+}
+
+// Stockage message des rôles
 let roleMessageData = null;
+const saveData = (data) => fs.writeFileSync('./rolesMessage.json', JSON.stringify(data, null, 2));
+const loadData = () => {
+  if (fs.existsSync('./rolesMessage.json')) {
+    roleMessageData = JSON.parse(fs.readFileSync('./rolesMessage.json'));
+  }
+};
+loadData();
 
-// Load stored roles and message data
-if (fs.existsSync('./roles.json')) {
-  createdRoles = JSON.parse(fs.readFileSync('./roles.json')).createdRoles || [];
-}
-if (fs.existsSync('./rolesMessage.json')) {
-  roleMessageData = JSON.parse(fs.readFileSync('./rolesMessage.json'));
-}
-
-function saveRoles() {
-  fs.writeFileSync('./roles.json', JSON.stringify({ createdRoles }, null, 2));
-}
-
-function saveRoleMessageData(data) {
-  fs.writeFileSync('./rolesMessage.json', JSON.stringify(data, null, 2));
-}
-
+// Mettre à jour le message de rôles
 async function updateRolesMessage(guild) {
-
   if (!roleMessageData) return;
 
   const channel = await guild.channels.fetch(roleMessageData.channelId).catch(() => null);
-  const rolesData = JSON.parse(fs.readFileSync('roles.json'));
+  if (!channel) return;
 
-  const embed = {
-    title: '🎮 Rôles de jeux disponibles',
-    description: rolesData.map(role => `${role.emoji} ${role.name} ${role.emoji}`).join('\n'),
-    color: 0x9c84ef
-  };
+  const [rows] = await db.execute('SELECT * FROM roles');
+  const rolesData = rows;
+
+  const embed = new EmbedBuilder()
+    .setTitle('🎮 Choisis tes jeux')
+    .setDescription(rolesData.map(r => `${r.emoji || ''} ${r.name} ${r.emoji || ''}`).join('\n') || 'Aucun rôle.')
+    .setColor(0x9c84ef);
 
   const components = [];
-  let currentRow = { type: 1, components: [] };
-
-  for (let i = 0; i < rolesData.length; i++) {
-    const role = rolesData[i];
-
-    const button = {
-      type: 2,
-      label: role.name,
-      custom_id: `role-${role.name}`,
-      style: 1
-    };
-
-    currentRow.components.push(button);
-
-    if (currentRow.components.length === 5 || i === rolesData.length - 1) {
-      components.push(currentRow);
-      currentRow = { type: 1, components: [] };
+  let row = new ActionRowBuilder();
+  rolesData.forEach((r, i) => {
+    row.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`toggle_role_${r.id}`)
+        .setLabel(r.name)
+        .setStyle(ButtonStyle.Secondary)
+    );
+    if ((i + 1) % 5 === 0 || i === rolesData.length - 1) {
+      components.push(row);
+      row = new ActionRowBuilder();
     }
+  });
 
-    // Ne pas dépasser 5 lignes (Discord limite)
-    if (components.length >= 5) break;
+  const message = await channel.messages.fetch(roleMessageData.messageId).catch(() => null);
+  if (message) {
+    await message.edit({ embeds: [embed], components });
   }
-
-  const message = await channel?.messages.fetch(roleMessageData.messageId).catch(() => null);
-  await message.edit({ embeds: [embed], components });
 }
 
-
+// Démarrage du bot
 client.once('ready', () => {
-  console.log(`✅ Connecté en tant que ${client.user.tag}`);
+  console.log(`🤖 Connecté en tant que ${client.user.tag}`);
 });
 
+// Interactions slash + boutons
 client.on(Events.InteractionCreate, async interaction => {
   if (interaction.isChatInputCommand()) {
     const { commandName } = interaction;
+
     if (commandName === 'role-create') {
       const nom = interaction.options.getString('nom');
       const couleur = interaction.options.getString('couleur');
       const icone = interaction.options.getString('icone') || '';
-      const name = `${icone} ${nom} ${icone}`.trim();
+      const roleName = `${icone} ${nom} ${icone}`.trim();
 
       const role = await interaction.guild.roles.create({
-        name,
+        name: roleName,
         color: parseColor(couleur) ?? 'Random',
         hoist: true,
-        mentionable: true,
-        reason: `Créé par ${interaction.user.tag}`
+        mentionable: true
       });
 
-      createdRoles.push({ id: role.id, name: role.name });
-      saveRoles();
+      await db.execute('INSERT INTO roles (id, name, color, emoji) VALUES (?, ?, ?, ?)', [
+        role.id, role.name, couleur || null, icone || null
+      ]);
+
       await updateRolesMessage(interaction.guild);
-      await interaction.reply({ content: `🎉 Rôle **${role.name}** créé avec succès.`, ephemeral: true });
+      await interaction.reply({ content: `✅ Rôle **${role.name}** créé !`, ephemeral: true });
 
     } else if (commandName === 'role-delete') {
       const nom = interaction.options.getString('nom');
-      const role = interaction.guild.roles.cache.find(role => 
-        role.name.includes(roleNameInput) && 
-        createdRoles.has(role.id) // <- uniquement les rôles créés via create
-    );
+      const role = interaction.guild.roles.cache.find(r => r.name === nom);
+      if (!role) return interaction.reply({ content: '❌ Rôle introuvable.', ephemeral: true });
 
-      if (role && createdRoles.find(r => r.id === role.id)) {
-        await role.delete('Suppression via /role-delete');
-        createdRoles = createdRoles.filter(r => r.id !== role.id);
-        saveRoles();
-        await updateRolesMessage(interaction.guild);
-        await interaction.reply({ content: `🗑️ Rôle **${nom}** supprimé.`, ephemeral: true });
-      } else {
-        await interaction.reply({ content: `❌ Rôle **${nom}** introuvable ou non géré par le bot.`, ephemeral: true });
-      }
+      await role.delete();
+      await db.execute('DELETE FROM roles WHERE id = ?', [role.id]);
+      await updateRolesMessage(interaction.guild);
+      await interaction.reply({ content: `🗑️ Rôle **${nom}** supprimé.`, ephemeral: true });
 
     } else if (commandName === 'roles-setup') {
+      const [rows] = await db.execute('SELECT * FROM roles');
+      const rolesData = rows;
+
       const embed = new EmbedBuilder()
-        .setTitle('🎮 Rôles de jeux disponibles')
-        .setDescription(createdRoles.map(role => `${role.name}`).join('\n') || 'Aucun rôle disponible.')
+        .setTitle('🎮 Choisis tes jeux')
+        .setDescription(rolesData.map(r => `${r.emoji || ''} ${r.name} ${r.emoji || ''}`).join('\n') || 'Aucun rôle.')
         .setColor('Random');
 
-      const rows = [];
-      for (const role of createdRoles) {
-        const button = new ButtonBuilder()
-          .setCustomId(`toggle_role_${role.id}`)
-          .setLabel(role.name)
-          .setStyle(ButtonStyle.Secondary);
-        rows.push(new ActionRowBuilder().addComponents(button));
-      }
+      const components = [];
+      let row = new ActionRowBuilder();
+      rolesData.forEach((r, i) => {
+        row.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`toggle_role_${r.id}`)
+            .setLabel(r.name)
+            .setStyle(ButtonStyle.Secondary)
+        );
+        if ((i + 1) % 5 === 0 || i === rolesData.length - 1) {
+          components.push(row);
+          row = new ActionRowBuilder();
+        }
+      });
 
-      const message = await interaction.channel.send({ embeds: [embed], components: rows });
+      const message = await interaction.channel.send({ embeds: [embed], components });
       roleMessageData = {
         channelId: interaction.channel.id,
         messageId: message.id
       };
-      saveRoleMessageData(roleMessageData);
-      await interaction.reply({ content: '📌 Message de rôles créé et suivi !', ephemeral: true });
+      saveData(roleMessageData);
+
+      await interaction.reply({ content: '📌 Message de rôles configuré !', ephemeral: true });
     }
   }
 
@@ -178,44 +188,43 @@ client.on(Events.InteractionCreate, async interaction => {
     const role = interaction.guild.roles.cache.get(roleId);
     if (!role) return;
 
-    const hasRole = interaction.member.roles.cache.has(roleId);
+    const member = interaction.member;
+    const hasRole = member.roles.cache.has(roleId);
+
     if (hasRole) {
-      await interaction.member.roles.remove(roleId);
+      await member.roles.remove(roleId);
       await interaction.reply({ content: `❌ Rôle **${role.name}** retiré.`, ephemeral: true });
     } else {
-      await interaction.member.roles.add(roleId);
+      await member.roles.add(roleId);
       await interaction.reply({ content: `✅ Rôle **${role.name}** ajouté.`, ephemeral: true });
     }
   }
 });
 
-// Register commands
+// Enregistrement des commandes
 const commands = [
   new SlashCommandBuilder()
     .setName('role-create')
     .setDescription('Créer un rôle jeu')
-    .addStringOption(option => option.setName('nom').setDescription('Nom du jeu').setRequired(true))
-    .addStringOption(option => option.setName('couleur').setDescription('Couleur hexadécimale du rôle').setRequired(false))
-    .addStringOption(option => option.setName('icone').setDescription('Icône à afficher autour du nom').setRequired(false)),
-
+    .addStringOption(opt => opt.setName('nom').setDescription('Nom du jeu').setRequired(true))
+    .addStringOption(opt => opt.setName('couleur').setDescription('Couleur (hex ou nom)').setRequired(false))
+    .addStringOption(opt => opt.setName('icone').setDescription('Emoji décoratif').setRequired(false)),
   new SlashCommandBuilder()
     .setName('role-delete')
     .setDescription('Supprimer un rôle jeu')
-    .addStringOption(option => option.setName('nom').setDescription('Nom complet du rôle').setRequired(true)),
-
+    .addStringOption(opt => opt.setName('nom').setDescription('Nom exact du rôle à supprimer').setRequired(true)),
   new SlashCommandBuilder()
     .setName('roles-setup')
-    .setDescription('Créer ou mettre à jour le message de sélection de rôles')
-].map(command => command.toJSON());
+    .setDescription('Créer le message pour gérer les rôles')
+].map(cmd => cmd.toJSON());
 
-const rest = new REST({ version: '10' }).setToken(TOKEN);
+const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 (async () => {
   try {
-    console.log('🔄 Enregistrement des commandes slash...');
-    await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-    console.log('✅ Commandes enregistrées');
-    client.login(TOKEN);
+    await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
+    console.log('✅ Commandes slash enregistrées.');
+    client.login(process.env.DISCORD_TOKEN);
   } catch (error) {
-    console.error(error);
+    console.error('Erreur lors de l’enregistrement des commandes :', error);
   }
 })();
