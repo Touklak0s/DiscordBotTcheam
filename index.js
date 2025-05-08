@@ -98,7 +98,7 @@ async function updateRolesMessage(client) {
     if (components.length >= 5) break;
   }
 
-  const message = await channel.messages.fetch(process.env.ROLES_MESSAGE_ID);
+  const message = await channel?.messages.fetch(roleMessageData.messageId).catch(() => null);
   await message.edit({ embeds: [embed], components });
 }
 
