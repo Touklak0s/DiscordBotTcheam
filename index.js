@@ -184,21 +184,32 @@ client.on(Events.InteractionCreate, async interaction => {
   }
 
   if (interaction.isButton()) {
-    const roleId = interaction.customId.replace('toggle_role_', '');
-    const role = interaction.guild.roles.cache.get(roleId);
-    if (!role) return;
-
-    const member = interaction.member;
-    const hasRole = member.roles.cache.has(roleId);
-
-    if (hasRole) {
-      await member.roles.remove(roleId);
-      await interaction.reply({ content: `❌ Rôle **${role.name}** retiré.`, ephemeral: true });
-    } else {
-      await member.roles.add(roleId);
-      await interaction.reply({ content: `✅ Rôle **${role.name}** ajouté.`, ephemeral: true });
+    try {
+      const roleId = interaction.customId.replace('toggle_role_', '');
+      const role = interaction.guild.roles.cache.get(roleId);
+      if (!role) return interaction.reply({ content: '❌ Rôle introuvable.', ephemeral: true });
+  
+      const member = interaction.member;
+      const hasRole = member.roles.cache.has(roleId);
+  
+      if (hasRole) {
+        await member.roles.remove(roleId);
+        await interaction.reply({ content: `❌ Rôle **${role.name}** retiré.`, ephemeral: true });
+      } else {
+        await member.roles.add(roleId);
+        await interaction.reply({ content: `✅ Rôle **${role.name}** ajouté.`, ephemeral: true });
+      }
+    } catch (error) {
+      console.error('Erreur interaction bouton :', error);
+      if (!interaction.replied) {
+        await interaction.reply({ 
+          content: `❌ Une erreur est survenue. ID du rôle manquant ou invalide : ${interaction.customId.replace('toggle_role_', '')}`, 
+          ephemeral: true 
+        });
+      }
     }
   }
+  
 });
 
 // Enregistrement des commandes
