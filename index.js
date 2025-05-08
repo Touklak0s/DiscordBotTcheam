@@ -79,7 +79,7 @@ async function updateRolesMessage(guild) {
   const channel = await guild.channels.fetch(roleMessageData.channelId).catch(() => null);
   if (!channel) return;
 
-  const [rows] = await db.execute('SELECT * FROM roles');
+  const [rows] = await db.execute('SELECT * FROM roledeuxmerde');
   const rolesData = rows;
 
   const embed = new EmbedBuilder()
@@ -125,18 +125,17 @@ client.on(Events.InteractionCreate, async interaction => {
       const roleName = `${icone} ${nom} ${icone}`.trim();
 
       const role = await interaction.guild.roles.create({
-        name: roleName,
-        color: parseColor(couleur) ?? 'Random',
-        hoist: true,
+        name       : roleName,
+        color      : parseColor(couleur) ?? 'Random',
+        hoist      : true,
         mentionable: true
       });
-      
-      await updateRolesMessage(interaction.guild);
 
-      await db.execute('INSERT INTO roles (id, name, color, emoji) VALUES (?, ?, ?, ?)', [
+      await db.execute('INSERT INTO roledeuxmerde (id, name, color, emoji) VALUES (?, ?, ?, ?)', [
         role.id, role.name, couleur || null, icone || null
       ]);
 
+      await updateRolesMessage(interaction.guild);
       await interaction.reply({ content: `✅ Rôle **${role.name}** créé !`, ephemeral: true });
 
     } else if (commandName === 'role-delete') {
@@ -145,12 +144,12 @@ client.on(Events.InteractionCreate, async interaction => {
       if (!role) return interaction.reply({ content: '❌ Rôle introuvable.', ephemeral: true });
 
       await role.delete();
-      await db.execute('DELETE FROM roles WHERE id = ?', [role.id]);
+      await db.execute('DELETE FROM roledeuxmerde WHERE id = ?', [role.id]);
       await updateRolesMessage(interaction.guild);
       await interaction.reply({ content: `🗑️ Rôle **${nom}** supprimé.`, ephemeral: true });
 
     } else if (commandName === 'roles-setup') {
-      const [rows] = await db.execute('SELECT * FROM roles');
+      const [rows] = await db.execute('SELECT * FROM roledeuxmerde');
       const rolesData = rows;
 
       const embed = new EmbedBuilder()
