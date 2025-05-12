@@ -42,14 +42,8 @@ module.exports = {
       await page.goto('https://aternos.org/servers/', { waitUntil: 'networkidle2' });
 
       // trouve le serveur par son nom dans un .server-name
-
-      //screenshot la page pour vérifier que le serveur est bien trouvé
-        await page.screenshot({ path: 'screenshot.png', fullPage: true });
-        await interaction.followUp({ content: 'Screenshot de la page Aternos', files: ['screenshot.png'] });
-
-        
         const serverSelector = `div.server-name:contains("${server_name}")`;
-        await page.waitForSelector(serverSelector, { timeout: 30000 });
+        await page.waitForSelector(serverSelector, { timeout: 10000 });
         const serverElement = await page.$(serverSelector);
         if (!serverElement) {
           await browser.close();
@@ -61,21 +55,29 @@ module.exports = {
       // clique sur le bouton de démarrage ou d'arrêt
       // si #start visible => clic sur #start pour démarrer le serveur, sinon clic sur #stop pour arrêter le serveur
 
-        // const startButton = await page.$('#start');
-        // const stopButton  = await page.$('#stop');
+      //
+await page.screenshot({ path: 'after-wait.png', fullPage: true });
+await interaction.followUp({
+  content: '📸 Page après le waitForSelector (debug avancé) :',
+  files: [{ attachment: await page.screenshot({ type: 'png' }), name: 'after-wait.png' }],
+  ephemeral: true
+});
 
-        // if (command === 'aternos-start' && startButton) {
-        //   await startButton.click();
-        // } else if (command === 'aternos-stop' && stopButton) {
-        //   await stopButton.click();
-        // } else {
-        //   await browser.close();
-        //   return interaction.followUp({ content: `❌ Le serveur **${server_name}** est déjà ${command === 'aternos-start' ? 'démarré' : 'arrêté'}.`, ephemeral: true });
-        // }
+        const startButton = await page.$('#start');
+        const stopButton  = await page.$('#stop');
 
-      const selector = command === 'aternos-start' ? '#start' : '#stop';
-      await page.waitForSelector(selector, { timeout: 10000 });
-      await page.click(selector);
+        if (command === 'aternos-start' && startButton) {
+          await startButton.click();
+        } else if (command === 'aternos-stop' && stopButton) {
+          await stopButton.click();
+        } else {
+          await browser.close();
+          return interaction.followUp({ content: `❌ Le serveur **${server_name}** est déjà ${command === 'aternos-start' ? 'démarré' : 'arrêté'}.`, ephemeral: true });
+        }
+
+    //   const selector = command === 'aternos-start' ? '#start' : '#stop';
+    //   await page.waitForSelector(selector, { timeout: 10000 });
+    //   await page.click(selector);
 
       await browser.close();
 
