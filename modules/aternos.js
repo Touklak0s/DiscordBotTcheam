@@ -32,8 +32,8 @@ module.exports = {
 
       await page.goto('https://aternos.org/go/', { waitUntil: 'networkidle2' });
 
-      await page.type('input.username', email);
-      await page.type('input.password', password);
+      await page.type('.username', email);
+      await page.type('.password', password);
       await page.click('button.login-button');
 
       await page.waitForNavigation();
