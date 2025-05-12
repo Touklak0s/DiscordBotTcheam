@@ -17,7 +17,7 @@ module.exports = {
       return interaction.reply({ content: '⚠️ Aucune configuration Aternos trouvée.', ephemeral: true });
     }
 
-    const { email, password, server_name } = rows[0];
+    const { username, password, server_name } = rows[0];
     await interaction.reply({ content: `⏳ Connexion à Aternos pour ${command === 'aternos-start' ? 'démarrer' : 'arrêter'} le serveur...`, ephemeral: true });
 
     try {
@@ -35,14 +35,9 @@ module.exports = {
 
       // Screenshot pour debug
       const debugShot = await page.screenshot({ type: 'png', fullPage: true });
-      await interaction.followUp({
-        content: '📸 Page après chargement de /go :',
-        files: [{ attachment: debugShot, name: 'aternos_debug.png' }],
-        ephemeral: true
-      });
 
       await page.waitForSelector('input.username', { visible: true, timeout: 30000 });
-      await page.type('input.username', email);
+      await page.type('input.username', username);
       await page.type('input.password', password);
       await page.click('button.login-button');
       await page.waitForNavigation({ waitUntil: 'networkidle2' });
