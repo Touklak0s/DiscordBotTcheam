@@ -91,18 +91,18 @@ module.exports = {
       ]);
 
       await updateRolesMessage(interaction.guild, db);
-      await interaction.reply({ content: `✅ Rôle **${role.name}** créé !`, ephemeral: true });
+      await interaction.reply({ content: `✅ Rôle **${role.name}** créé !`, flags: 1 << 6 });
     }
 
     if (commandName === 'role-delete') {
       const nom = interaction.options.getString('nom');
       const role = interaction.guild.roles.cache.find(r => r.name === nom);
-      if (!role) return interaction.reply({ content: '❌ Rôle introuvable.', ephemeral: true });
+      if (!role) return interaction.reply({ content: '❌ Rôle introuvable.', flags: 1 << 6 });
 
       await role.delete();
       await db.execute('DELETE FROM roletroismerde WHERE role_id = ?', [role.id]);
       await updateRolesMessage(interaction.guild, db);
-      await interaction.reply({ content: `🗑️ Rôle **${nom}** supprimé.`, ephemeral: true });
+      await interaction.reply({ content: `🗑️ Rôle **${nom}** supprimé.`, flags: 1 << 6 });
     }
 
     if (commandName === 'roles-setup') {
@@ -132,7 +132,7 @@ module.exports = {
       const message = await interaction.channel.send({ embeds: [embed], components });
       const roleMessageData = { channelId: interaction.channel.id, messageId: message.id };
       saveData(roleMessageData);
-      await interaction.reply({ content: '📌 Message de rôles configuré !', ephemeral: true });
+      await interaction.reply({ content: '📌 Message de rôles configuré !', flags: 1 << 6 });
     }
   },
 
@@ -140,7 +140,7 @@ module.exports = {
     const roleId = interaction.customId.replace('toggle_role_', '');
     const role = interaction.guild.roles.cache.get(roleId);
     if (!role) {
-      return interaction.reply({ content: `❌ Rôle introuvable : ${roleId}`, ephemeral: true });
+      return interaction.reply({ content: `❌ Rôle introuvable : ${roleId}`, flags: 1 << 6 });
     }
 
     const member = interaction.member;
@@ -148,10 +148,10 @@ module.exports = {
 
     if (hasRole) {
       await member.roles.remove(roleId);
-      await interaction.reply({ content: `❌ Rôle **${role.name}** retiré.`, ephemeral: true });
+      await interaction.reply({ content: `❌ Rôle **${role.name}** retiré.`, flags: 1 << 6 });
     } else {
       await member.roles.add(roleId);
-      await interaction.reply({ content: `✅ Rôle **${role.name}** ajouté.`, ephemeral: true });
+      await interaction.reply({ content: `✅ Rôle **${role.name}** ajouté.`, flags: 1 << 6 });
     }
   }
 };

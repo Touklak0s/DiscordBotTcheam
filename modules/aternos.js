@@ -18,15 +18,17 @@ module.exports = {
 
     const [rows] = await db.execute('SELECT * FROM aternos WHERE id = ?', [guildId]);
     if (!rows.length) {
-      return interaction.reply({ content: '⚠️ Le serveur Aternos n’a pas encore été configuré.', ephemeral: true });
+      return interaction.reply({ content: '⚠️ Le serveur Aternos n’a pas encore été configuré.', flags: 1 << 6 });
     }
 
     const { email, password, server_name } = rows[0];
-    await interaction.reply({ content: `⏳ Tentative de ${command === 'aternos-start' ? 'démarrage' : 'arrêt'} du serveur Aternos...`, ephemeral: true });
+    await interaction.reply({ content: `⏳ Tentative de ${command === 'aternos-start' ? 'démarrage' : 'arrêt'} du serveur Aternos...`, flags: 1 << 6 });
 
     try {
-      const browser = await puppeteer.launch({ headless: true });
-      const page = await browser.newPage();
+       const browser = await puppeteer.launch({
+          headless: true,
+          args: ['--no-sandbox', '--disable-setuid-sandbox']
+       });      const page = await browser.newPage();
 
       await page.goto('https://aternos.org/go/', { waitUntil: 'networkidle2' });
 
@@ -45,10 +47,10 @@ module.exports = {
 
       await browser.close();
 
-      await interaction.followUp({ content: `✅ Serveur **${server_name}** en cours de ${command === 'aternos-start' ? 'démarrage' : 'fermeture'}.`, ephemeral: true });
+      await interaction.followUp({ content: `✅ Serveur **${server_name}** en cours de ${command === 'aternos-start' ? 'démarrage' : 'fermeture'}.`, flags: 1 << 6 });
     } catch (err) {
       console.error('Erreur Puppeteer :', err);
-      await interaction.followUp({ content: '❌ Une erreur est survenue lors de l’automatisation.', ephemeral: true });
+      await interaction.followUp({ content: '❌ Une erreur est survenue lors de l’automatisation.', flags: 1 << 6 });
     }
   }
 };
