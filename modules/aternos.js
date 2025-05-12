@@ -42,6 +42,12 @@ module.exports = {
       await page.goto('https://aternos.org/servers/', { waitUntil: 'networkidle2' });
 
       // trouve le serveur par son nom dans un .server-name
+
+      //screenshot la page pour vérifier que le serveur est bien trouvé
+        await page.screenshot({ path: 'screenshot.png', fullPage: true });
+        await interaction.followUp({ content: 'Screenshot de la page Aternos', files: ['screenshot.png'] });
+
+        
         const serverSelector = `div.server-name:contains("${server_name}")`;
         await page.waitForSelector(serverSelector, { timeout: 10000 });
         const serverElement = await page.$(serverSelector);
