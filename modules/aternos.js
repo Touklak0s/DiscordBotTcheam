@@ -55,21 +55,21 @@ module.exports = {
       // clique sur le bouton de démarrage ou d'arrêt
       // si #start visible => clic sur #start pour démarrer le serveur, sinon clic sur #stop pour arrêter le serveur
 
-        const startButton = await page.$('#start');
-        const stopButton  = await page.$('#stop');
+        // const startButton = await page.$('#start');
+        // const stopButton  = await page.$('#stop');
 
-        if (command === 'aternos-start' && startButton) {
-          await startButton.click();
-        } else if (command === 'aternos-stop' && stopButton) {
-          await stopButton.click();
-        } else {
-          await browser.close();
-          return interaction.followUp({ content: `❌ Le serveur **${server_name}** est déjà ${command === 'aternos-start' ? 'démarré' : 'arrêté'}.`, ephemeral: true });
-        }
+        // if (command === 'aternos-start' && startButton) {
+        //   await startButton.click();
+        // } else if (command === 'aternos-stop' && stopButton) {
+        //   await stopButton.click();
+        // } else {
+        //   await browser.close();
+        //   return interaction.followUp({ content: `❌ Le serveur **${server_name}** est déjà ${command === 'aternos-start' ? 'démarré' : 'arrêté'}.`, ephemeral: true });
+        // }
 
-    //   const selector = command === 'aternos-start' ? '#start' : '#stop';
-    //   await page.waitForSelector(selector, { timeout: 10000 });
-    //   await page.click(selector);
+      const selector = command === 'aternos-start' ? '#start' : '#stop';
+      await page.waitForSelector(selector, { timeout: 10000 });
+      await page.click(selector);
 
       await browser.close();
 
