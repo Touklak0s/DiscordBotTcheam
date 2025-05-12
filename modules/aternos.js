@@ -10,9 +10,9 @@ module.exports = {
   async execute(interaction, client) {
     const db = client.db;
     const command = interaction.commandName;
-    const guildId = interaction.guild.id;
+    const guildId = 1;
 
-    const [rows] = await db.execute('SELECT * FROM aternos WHERE guild_id = ?', [guildId]);
+    const [rows] = await db.execute('SELECT * FROM aternos WHERE id = ?', [guildId]);
     if (!rows.length) {
       return interaction.reply({ content: '⚠️ Aucune configuration Aternos trouvée.', ephemeral: true });
     }
