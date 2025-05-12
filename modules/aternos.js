@@ -32,11 +32,15 @@ module.exports = {
 
       await page.goto('https://aternos.org/go/', { waitUntil: 'networkidle2' });
 
-      await page.type('.username', email);
-      await page.type('.password', password);
+      // Remplir le formulaire avec les nouveaux sélecteurs
+      await page.waitForSelector('input.username');
+      await page.type('input.username', email);
+      await page.type('input.password', password);
+      
+      // Soumettre le formulaire
       await page.click('button.login-button');
+      await page.waitForNavigation({ waitUntil: 'networkidle2' });
 
-      await page.waitForNavigation();
       await page.goto(`https://aternos.org/server/`, { waitUntil: 'networkidle2' });
 
       // Vérifier et cliquer sur le bouton
