@@ -41,10 +41,10 @@ module.exports = {
         ephemeral: true
       });
 
-      await page.waitForSelector('input[name="user"]', { timeout: 30000 });
-      await page.type('input[name="user"]', email);
-      await page.type('input[name="password"]', password);
-      await page.click('button[type="submit"]');
+      await page.waitForSelector('input.username', { visible: true, timeout: 30000 });
+      await page.type('input.username', email);
+      await page.type('input.password', password);
+      await page.click('button.login-button');
       await page.waitForNavigation({ waitUntil: 'networkidle2' });
 
       await page.goto('https://aternos.org/server/', { waitUntil: 'networkidle2' });
