@@ -43,7 +43,7 @@ module.exports = {
 
       // trouve le serveur par son nom dans un .server-name
         const serverSelector = `div.server-name:contains("${server_name}")`;
-        await page.waitForSelector(serverSelector, { timeout: 10000 });
+        await page.waitForSelector(serverSelector, { visible: true, timeout: 30000 });
         const serverElement = await page.$(serverSelector);
         if (!serverElement) {
           await browser.close();
