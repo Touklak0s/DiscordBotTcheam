@@ -80,7 +80,7 @@ module.exports = {
       //Page de démarrage/arrêt
           // si .btn-success est visible, alors le serveur est démarré -> on le stoppe (command === 'aternos-stop')
           // Sinon si le .btn-danger est visible, alors le serveur arrêté -> on le démarre (command === 'aternos-start')
-          const buttonSelector = command === 'aternos-start' ? '.btn-danger' : '.btn-success';
+          const buttonSelector = command === 'aternos-start' ? '.btn-success' : '.btn-danger';
           await page.waitForSelector(buttonSelector, { visible: true, timeout: 30000 });
           const button = await page.$(buttonSelector);
           if (!button) {
