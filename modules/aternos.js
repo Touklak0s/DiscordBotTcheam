@@ -77,44 +77,34 @@ module.exports = {
             }
           }
           
-                    await page.screenshot({ path: 'after-wait.png', fullPage: true });
-                    await interaction.followUp({
-                      content: '📸 Page après le waitForSelector (debug avancé) :',
-                      files: [{ attachment: await page.screenshot({ type: 'png' }), name: 'after-wait.png' }],
-                      ephemeral: true
-                    });
+          await page.waitForNavigation({ waitUntil: 'networkidle2' });
 
-            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+      //Page de démarrage/arrêt
+          // si .btn-success est visible, alors le serveur est démarré -> on le stoppe (command === 'aternos-stop')
+          // Sinon si le .btn-danger est visible, alors le serveur arrêté -> on le démarre (command === 'aternos-start')
+          const buttonSelector = command === 'aternos-start' ? '.btn-danger' : '.btn-success';
+          await page.waitForSelector(buttonSelector, { visible: true, timeout: 30000 });
+          const button = await page.$(buttonSelector);
+          if (!button) {
+            await browser.close();
+            return interaction.followUp({ content: `❌ Impossible de trouver le bouton pour ${command === 'aternos-start' ? 'démarrer' : 'arrêter'} le serveur.`, ephemeral: true });
+          }
+          await button.click();
+          await page.waitForTimeout(2000); // Attendre un peu pour que l'action soit prise en compte
+          // Vérifier si le serveur est en cours de démarrage ou d'arrêt
+          const statusSelector = command === 'aternos-start' ? '.btn-danger' : '.btn-success';
+          await page.waitForSelector(statusSelector, { visible: true, timeout: 30000 });
+          const statusButton = await page.$(statusSelector);
+          if (!statusButton) {
+            await browser.close();
+            return interaction.followUp({ content: `❌ Impossible de ${command === 'aternos-start' ? 'démarrer' : 'arrêter'} le serveur.`, ephemeral: true });
+          }
+          await page.waitForTimeout(2000); // Attendre un peu pour que l'action soit prise en compte
+          // Vérifier si le serveur est en cours de démarrage ou d'arrêt
+          // const statusText = await (await statusButton.getProperty('textContent')).jsonValue(); 
+          
           
 
-          await page.screenshot({ path: 'after-wait.png', fullPage: true });
-          await interaction.followUp({
-            content: '📸 Page après le waitForSelector (debug avancé) :',
-            files: [{ attachment: await page.screenshot({ type: 'png' }), name: 'after-wait.png' }],
-            ephemeral: true
-          });
-          // Attendre qu'un élément spécifique à la page du serveur apparaisse (par exemple, le bouton start/stop)
-          await page.waitForSelector('#start, #stop', { visible: true, timeout: 30000 });
-
-      // clique sur le bouton de démarrage ou d'arrêt
-      // si #start visible => clic sur #start pour démarrer le serveur, sinon clic sur #stop pour arrêter le serveur
-
-
-        const startButton = await page.$('#start');
-        const stopButton  = await page.$('#stop');
-
-        if (command === 'aternos-start' && startButton) {
-          await startButton.click();
-        } else if (command === 'aternos-stop' && stopButton) {
-          await stopButton.click();
-        } else {
-          await browser.close();
-          return interaction.followUp({ content: `❌ Le serveur **${server_name}** est déjà ${command === 'aternos-start' ? 'démarré' : 'arrêté'}.`, ephemeral: true });
-        }
-
-    //   const selector = command === 'aternos-start' ? '#start' : '#stop';
-    //   await page.waitForSelector(selector, { timeout: 10000 });
-    //   await page.click(selector);
 
       await browser.close();
 
