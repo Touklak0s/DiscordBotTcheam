@@ -49,22 +49,33 @@ module.exports = {
           await page.waitForSelector('.fc-button-label', { visible: true, timeout: 30000 }).catch(() => null);
           await page.click('.fc-button-label');
 
-          await page.screenshot({ path: 'after-wait.png', fullPage: true });
-          await interaction.followUp({
-            content: '📸 Page après le waitForSelector (debug avancé) :',
-            files: [{ attachment: await page.screenshot({ type: 'png' }), name: 'after-wait.png' }],
-            ephemeral: true
-          });
-
         // trouve le serveur par son nom dans un .server-name
-          const serverSelector = `div.server-name:contains("${server_name}")`;
-          await page.waitForSelector(serverSelector, { visible: true, timeout: 30000 });
-          const serverElement = await page.$(serverSelector);
-          if (!serverElement) {
+          // Trouve le serveur par son nom dans un .server-name
+          await page.waitForSelector('div.server-name', { visible: true, timeout: 30000 });
+
+          const serverElementHandle = await page.$$eval('div.server-name', (elements, server_name) => {
+            const el = elements.find(e => e.textContent.trim() === server_name);
+            if (el) {
+              el.scrollIntoView();
+              return el.getAttribute('data-server-id') || el.innerText; // Just to return something non-null
+            }
+            return null;
+          }, server_name);
+
+          if (!serverElementHandle) {
             await browser.close();
             return interaction.followUp({ content: `❌ Serveur **${server_name}** introuvable.`, ephemeral: true });
           }
-          await serverElement.click();
+
+          // Clique sur le serveur correspondant
+          const serverElements = await page.$$('div.server-name');
+          for (const el of serverElements) {
+            const text = await (await el.getProperty('textContent')).jsonValue();
+            if (text.trim() === server_name) {
+              await el.click();
+              break;
+            }
+          }
           await page.waitForNavigation({ waitUntil: 'networkidle2' });
 
       // clique sur le bouton de démarrage ou d'arrêt
