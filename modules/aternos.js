@@ -42,6 +42,12 @@ module.exports = {
       await page.goto('https://aternos.org/servers/', { waitUntil: 'networkidle2' });
 
       // trouve le serveur par son nom dans un .server-name
+      await page.screenshot({ path: 'after-wait.png', fullPage: true });
+      await interaction.followUp({
+        content: '📸 Page après le waitForSelector (debug avancé) :',
+        files: [{ attachment: await page.screenshot({ type: 'png' }), name: 'after-wait.png' }],
+        ephemeral: true
+      });
         const serverSelector = `div.server-name:contains("${server_name}")`;
         await page.waitForSelector(serverSelector, { visible: true, timeout: 30000 });
         const serverElement = await page.$(serverSelector);
@@ -56,12 +62,7 @@ module.exports = {
       // si #start visible => clic sur #start pour démarrer le serveur, sinon clic sur #stop pour arrêter le serveur
 
       //
-await page.screenshot({ path: 'after-wait.png', fullPage: true });
-await interaction.followUp({
-  content: '📸 Page après le waitForSelector (debug avancé) :',
-  files: [{ attachment: await page.screenshot({ type: 'png' }), name: 'after-wait.png' }],
-  ephemeral: true
-});
+
 
         const startButton = await page.$('#start');
         const stopButton  = await page.$('#stop');
