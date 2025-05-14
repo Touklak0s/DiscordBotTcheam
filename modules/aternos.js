@@ -88,21 +88,8 @@ module.exports = {
             return interaction.followUp({ content: `❌ Impossible de trouver le bouton pour ${command === 'aternos-start' ? 'démarrer' : 'arrêter'} le serveur.`, ephemeral: true });
           }
           await button.click();
-          // await page.waitForTimeout(2000); // Attendre un peu pour que l'action soit prise en compte
-          // Vérifier si le serveur est en cours de démarrage ou d'arrêt
-          const statusSelector = command === 'aternos-start' ? '.btn-danger' : '.btn-success';
-          await page.waitForSelector(statusSelector, { visible: true, timeout: 30000 });
-          const statusButton = await page.$(statusSelector);
-          if (!statusButton) {
-            await browser.close();
-            return interaction.followUp({ content: `❌ Impossible de ${command === 'aternos-start' ? 'démarrer' : 'arrêter'} le serveur.`, ephemeral: true });
-          }
-          await page.waitForTimeout(2000); // Attendre un peu pour que l'action soit prise en compte
-          // Vérifier si le serveur est en cours de démarrage ou d'arrêt
-          // const statusText = await (await statusButton.getProperty('textContent')).jsonValue(); 
-          
-          
 
+      
 
       await browser.close();
 
