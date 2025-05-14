@@ -76,7 +76,25 @@ module.exports = {
               break;
             }
           }
-          await page.waitForNavigation({ waitUntil: 'networkidle2' });
+          
+                    await page.screenshot({ path: 'after-wait.png', fullPage: true });
+                    await interaction.followUp({
+                      content: '📸 Page après le waitForSelector (debug avancé) :',
+                      files: [{ attachment: await page.screenshot({ type: 'png' }), name: 'after-wait.png' }],
+                      ephemeral: true
+                    });
+
+            await page.waitForNavigation({ waitUntil: 'networkidle2' });
+          
+
+          await page.screenshot({ path: 'after-wait.png', fullPage: true });
+          await interaction.followUp({
+            content: '📸 Page après le waitForSelector (debug avancé) :',
+            files: [{ attachment: await page.screenshot({ type: 'png' }), name: 'after-wait.png' }],
+            ephemeral: true
+          });
+          // Attendre qu'un élément spécifique à la page du serveur apparaisse (par exemple, le bouton start/stop)
+          await page.waitForSelector('#start, #stop', { visible: true, timeout: 30000 });
 
       // clique sur le bouton de démarrage ou d'arrêt
       // si #start visible => clic sur #start pour démarrer le serveur, sinon clic sur #stop pour arrêter le serveur
