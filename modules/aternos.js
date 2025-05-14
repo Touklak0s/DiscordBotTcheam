@@ -43,10 +43,8 @@ module.exports = {
 
 
       // Accepte les cookies 'fc-button-label'
-      const acceptCookiesButton = await page.waitForSelector('fc-button-label', { visible: true, timeout: 30000 }).catch(() => null);
-      if (acceptCookiesButton) {
-        await acceptCookiesButton.click();
-      }
+      await page.waitForSelector('fc-button-label', { visible: true, timeout: 30000 }).catch(() => null);
+      await page.click('fc-button-label');
 
       await page.screenshot({ path: 'after-wait.png', fullPage: true });
       await interaction.followUp({
