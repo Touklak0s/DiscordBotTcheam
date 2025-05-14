@@ -77,8 +77,6 @@ module.exports = {
             }
           }
           
-          await page.waitForNavigation({ waitUntil: 'networkidle2' });
-
       //Page de démarrage/arrêt
           // si .btn-success est visible, alors le serveur est démarré -> on le stoppe (command === 'aternos-stop')
           // Sinon si le .btn-danger est visible, alors le serveur arrêté -> on le démarre (command === 'aternos-start')
