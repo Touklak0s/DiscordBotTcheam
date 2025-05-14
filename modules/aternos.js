@@ -41,13 +41,21 @@ module.exports = {
 
       await page.goto('https://aternos.org/servers/', { waitUntil: 'networkidle2' });
 
-      // trouve le serveur par son nom dans un .server-name
+
+      // Accepte les cookies 'fc-button-label'
+      const acceptCookiesButton = await page.waitForSelector('fc-button-label', { visible: true, timeout: 30000 }).catch(() => null);
+      if (acceptCookiesButton) {
+        await acceptCookiesButton.click();
+      }
+
       await page.screenshot({ path: 'after-wait.png', fullPage: true });
       await interaction.followUp({
         content: '📸 Page après le waitForSelector (debug avancé) :',
         files: [{ attachment: await page.screenshot({ type: 'png' }), name: 'after-wait.png' }],
         ephemeral: true
       });
+
+      // trouve le serveur par son nom dans un .server-name
         const serverSelector = `div.server-name:contains("${server_name}")`;
         await page.waitForSelector(serverSelector, { visible: true, timeout: 30000 });
         const serverElement = await page.$(serverSelector);
