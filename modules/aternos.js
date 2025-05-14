@@ -21,53 +21,60 @@ module.exports = {
     await interaction.reply({ content: `⏳ Connexion à Aternos pour ${command === 'aternos-start' ? 'démarrer' : 'arrêter'} le serveur...`, ephemeral: true });
 
     try {
+
+      // Browserless
       const browser = await puppeteer.launch({
         headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
       });
-      const page = await browser.newPage();
 
-      await page.setUserAgent(
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-      );
+      // Page de connexion
 
-      await page.goto('https://aternos.org/go/', { waitUntil: 'networkidle2' });
+        const page = await browser.newPage();
+        await page.setUserAgent(
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+        );
+        await page.goto('https://aternos.org/go/', { waitUntil: 'networkidle2' });
 
-      await page.waitForSelector('input.username', { visible: true, timeout: 30000 });
-      await page.type('input.username', username);
-      await page.type('input.password', password);
-      await page.click('button.login-button');
-      await page.waitForNavigation({ waitUntil: 'networkidle2' });
-
-      await page.goto('https://aternos.org/servers/', { waitUntil: 'networkidle2' });
-
-
-      // Accepte les cookies 'fc-button-label'
-      await page.waitForSelector('fc-button-label', { visible: true, timeout: 30000 }).catch(() => null);
-      await page.click('fc-button-label');
-
-      await page.screenshot({ path: 'after-wait.png', fullPage: true });
-      await interaction.followUp({
-        content: '📸 Page après le waitForSelector (debug avancé) :',
-        files: [{ attachment: await page.screenshot({ type: 'png' }), name: 'after-wait.png' }],
-        ephemeral: true
-      });
-
-      // trouve le serveur par son nom dans un .server-name
-        const serverSelector = `div.server-name:contains("${server_name}")`;
-        await page.waitForSelector(serverSelector, { visible: true, timeout: 30000 });
-        const serverElement = await page.$(serverSelector);
-        if (!serverElement) {
-          await browser.close();
-          return interaction.followUp({ content: `❌ Serveur **${server_name}** introuvable.`, ephemeral: true });
-        }
-        await serverElement.click();
+        await page.waitForSelector('input.username', { visible: true, timeout: 30000 });
+        await page.type('input.username', username);
+        await page.type('input.password', password);
+        await page.click('button.login-button');
         await page.waitForNavigation({ waitUntil: 'networkidle2' });
+
+
+      // Page des serveurs 
+        page = await browser.newPage();
+        await page.setUserAgent(
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+        );
+        await page.goto('https://aternos.org/servers/', { waitUntil: 'networkidle2' });
+
+
+        // Accepte les cookies 'fc-button-label'
+          await page.waitForSelector('.fc-button-label', { visible: true, timeout: 30000 }).catch(() => null);
+          await page.click('.fc-button-label');
+
+          await page.screenshot({ path: 'after-wait.png', fullPage: true });
+          await interaction.followUp({
+            content: '📸 Page après le waitForSelector (debug avancé) :',
+            files: [{ attachment: await page.screenshot({ type: 'png' }), name: 'after-wait.png' }],
+            ephemeral: true
+          });
+
+        // trouve le serveur par son nom dans un .server-name
+          const serverSelector = `div.server-name:contains("${server_name}")`;
+          await page.waitForSelector(serverSelector, { visible: true, timeout: 30000 });
+          const serverElement = await page.$(serverSelector);
+          if (!serverElement) {
+            await browser.close();
+            return interaction.followUp({ content: `❌ Serveur **${server_name}** introuvable.`, ephemeral: true });
+          }
+          await serverElement.click();
+          await page.waitForNavigation({ waitUntil: 'networkidle2' });
 
       // clique sur le bouton de démarrage ou d'arrêt
       // si #start visible => clic sur #start pour démarrer le serveur, sinon clic sur #stop pour arrêter le serveur
-
-      //
 
 
         const startButton = await page.$('#start');
