@@ -44,12 +44,6 @@ module.exports = {
 
 
       // Page des serveurs 
-        page = await browser.newPage();
-        await page.setUserAgent(
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-        );
-        await page.goto('https://aternos.org/servers/', { waitUntil: 'networkidle2' });
-
 
         // Accepte les cookies 'fc-button-label'
           await page.waitForSelector('.fc-button-label', { visible: true, timeout: 30000 }).catch(() => null);
